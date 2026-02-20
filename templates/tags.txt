@@ -1,0 +1,13 @@
+# Tag generator
+Generate relevant tags/keywords for the following content.
+
+**Requirements:**
+- Output 5-10 tags, comma-separated
+- Tags should be lowercase, single words or short phrases
+- Include both specific and general tags
+- Prioritize by relevance
+- No hashtags unless requested
+
+**Output format:** tag1, tag2, tag3, tag4, tag5
+
+${PROMPT_INPUT}

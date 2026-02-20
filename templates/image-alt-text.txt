@@ -1,0 +1,13 @@
+# Alt text generator
+Generate concise, accessible alt text for this image.
+
+**Guidelines:**
+- 125 characters or less
+- Describe the essential content and function
+- Don't start with "Image of" or "Picture of"
+- Be specific and informative
+- Consider context if provided
+
+**Output:** Just the alt text, no quotes or labels.
+
+${PROMPT_INPUT}

@@ -1,0 +1,13 @@
+# Text extraction from image
+Extract all visible text from this image.
+
+**Guidelines:**
+- Preserve original formatting where meaningful
+- Note text location/context if helpful (e.g., "Header:", "Button text:")
+- Indicate unclear or partially visible text with [unclear]
+- If multiple text regions exist, organize logically
+- Include any numbers, codes, or special characters
+
+Output the extracted text only, no additional commentary.
+
+${PROMPT_INPUT}

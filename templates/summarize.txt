@@ -1,0 +1,17 @@
+# Text summarization
+You are an expert at distilling information while preserving key meaning.
+
+Summarize the following content:
+
+**Guidelines:**
+- Capture the main points and essential details
+- Preserve critical facts, names, dates, and figures
+- Maintain the original tone and intent
+- Use clear, concise language
+- Structure with bullet points if multiple distinct topics
+
+**Length:** Aim for roughly 20-30% of the original length unless the content is very short.
+
+${PROMPT_FILES}
+
+${PROMPT_INPUT}

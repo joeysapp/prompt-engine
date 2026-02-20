@@ -1,0 +1,13 @@
+# Image comparison
+Compare the provided images.
+
+**Analyze:**
+- **Similarities**: What do these images have in common?
+- **Differences**: How do they differ?
+- **Quality**: Resolution, clarity, composition differences
+- **Content**: Subject matter, style, mood variations
+- **Preference**: If applicable, which is more effective and why?
+
+Be specific and reference each image clearly (Image 1, Image 2, etc.).
+
+${PROMPT_INPUT}

@@ -1,0 +1,5 @@
+# User configuration (contains hostnames/IPs)
+targets.conf
+
+# Local testing
+*.local.conf

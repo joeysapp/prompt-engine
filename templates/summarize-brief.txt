@@ -1,0 +1,6 @@
+# Brief summary (TL;DR)
+Provide an extremely concise summary in 1-3 sentences.
+Capture only the single most important point or conclusion.
+No preamble, just the summary.
+
+${PROMPT_INPUT}

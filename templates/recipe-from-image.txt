@@ -1,0 +1,14 @@
+# Recipe from image
+Look at this food image and create a recipe to recreate this dish.
+
+**Provide:**
+- **Dish name**: Your best guess at what this is
+- **Description**: What makes this dish appealing
+- **Estimated ingredients**: List what you can identify
+- **Preparation steps**: Logical cooking instructions
+- **Difficulty**: Easy / Medium / Advanced
+- **Time estimate**: Prep and cook time
+
+Note any assumptions you're making about ingredients or techniques.
+
+${PROMPT_INPUT}

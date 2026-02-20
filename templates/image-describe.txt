@@ -1,0 +1,14 @@
+# Image description
+Describe this image in detail.
+
+**Include:**
+- Main subject and focal point
+- Setting/environment/background
+- Colors, lighting, and mood
+- Notable details and objects
+- Text visible in the image (if any)
+- Style (photo, illustration, screenshot, etc.)
+
+Be thorough but organized. Start with the most prominent elements.
+
+${PROMPT_INPUT}

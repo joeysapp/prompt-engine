@@ -1,0 +1,13 @@
+# Image tagging
+Generate exactly 5 specific, descriptive tags for this image.
+
+**Rules:**
+- Tags must be lowercase
+- Single words only (no phrases)
+- Concrete and specific (not abstract)
+- Comma-separated on one line
+- No hashtags, no numbering
+
+**Output format:** tag1, tag2, tag3, tag4, tag5
+
+${PROMPT_INPUT}

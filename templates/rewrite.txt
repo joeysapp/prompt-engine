@@ -1,0 +1,17 @@
+# Text rewriting
+Rewrite the following text while preserving its core meaning.
+
+**Guidelines:**
+- Maintain the original intent and key information
+- Improve clarity and readability
+- Fix grammatical issues
+- Adjust tone if specified, otherwise keep similar
+- Preserve any technical accuracy
+
+**If style is specified, follow it. Otherwise, aim for:**
+- Clear and direct language
+- Active voice where appropriate
+- Varied sentence structure
+- Professional but accessible tone
+
+${PROMPT_INPUT}

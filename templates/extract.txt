@@ -1,0 +1,16 @@
+# Information extraction
+Extract structured information from the following content.
+
+**Extract all identifiable:**
+- Names (people, organizations, places)
+- Dates and times
+- Numbers and quantities
+- Contact information (emails, phones, addresses)
+- Key facts and claims
+- Action items or tasks
+- Relationships between entities
+
+**Output format:** Structured list grouped by category.
+Only include categories that have data to extract.
+
+${PROMPT_INPUT}

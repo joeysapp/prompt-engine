@@ -1,0 +1,23 @@
+# Prompt Engine Targets Configuration
+#
+# Copy this file to ~/.prompt-engine/targets.conf and customize.
+#
+# Format: name|type|address
+#
+# Types:
+#   local - Direct local ollama (address is empty)
+#   http  - Ollama HTTP API (address is full URL)
+#   ssh   - Remote via SSH (address is user@host)
+#
+# Examples:
+
+# HTTP targets (Ollama API)
+# myserver|http|http://192.168.1.100:11434
+# gpu-box|http|http://gpu.local:11434
+
+# SSH targets (runs ollama on remote machine)
+# server1|ssh|user@server1.local
+# cloud|ssh|ubuntu@my-cloud-gpu.example.com
+
+# The first target defined becomes available as an option.
+# Set PROMPT_ENGINE_TARGET env var or use -r flag to select.

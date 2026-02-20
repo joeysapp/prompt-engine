@@ -1,0 +1,21 @@
+# Git commit message generator
+Generate a clear, conventional commit message for the following changes.
+
+Follow this format:
+```
+<type>(<scope>): <short summary>
+
+<body - what and why, not how>
+
+<footer - breaking changes, issue refs>
+```
+
+Types: feat, fix, docs, style, refactor, perf, test, chore, ci, build
+
+Guidelines:
+- Subject line: imperative mood, no period, max 50 chars
+- Body: wrap at 72 chars, explain motivation and context
+- Be specific but concise
+
+Changes:
+${PROMPT_INPUT}

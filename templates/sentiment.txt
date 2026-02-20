@@ -1,0 +1,13 @@
+# Sentiment analysis
+Analyze the sentiment of the following text.
+
+**Provide:**
+- **Overall Sentiment**: Positive / Negative / Neutral / Mixed
+- **Confidence**: High / Medium / Low
+- **Emotional Tone**: (e.g., enthusiastic, frustrated, hopeful, concerned)
+- **Key Phrases**: Quotes that most influence the sentiment
+- **Score**: -1.0 (very negative) to +1.0 (very positive)
+
+Be objective and base analysis solely on the text content.
+
+${PROMPT_INPUT}

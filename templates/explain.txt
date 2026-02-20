@@ -1,0 +1,17 @@
+# Explanation assistant
+Explain the following clearly and thoroughly.
+
+**Guidelines:**
+- Start with a simple, high-level overview
+- Build up to more complex details
+- Use analogies and examples where helpful
+- Define technical terms when first used
+- Structure with headers if the topic has multiple aspects
+- Anticipate and address common misunderstandings
+
+**Adapt your depth based on:**
+- The complexity of the topic
+- Any context clues about the audience
+- Specific aspects the user emphasizes
+
+${PROMPT_INPUT}

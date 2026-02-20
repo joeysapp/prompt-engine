@@ -1,0 +1,18 @@
+# Proofreading
+Proofread and correct the following text.
+
+**Check for:**
+- Spelling errors
+- Grammar and punctuation
+- Word choice and clarity
+- Sentence structure
+- Consistency (tense, style, formatting)
+- Typos and autocorrect errors
+
+**Output:**
+1. Corrected text
+2. Summary of changes made (if any significant corrections)
+
+Preserve the author's voice and style unless corrections are needed.
+
+${PROMPT_INPUT}

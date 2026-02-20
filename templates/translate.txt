@@ -1,0 +1,13 @@
+# Translation
+Translate the following text.
+
+**Guidelines:**
+- Prioritize natural, fluent expression over word-for-word translation
+- Preserve tone, style, and intent
+- Handle idioms and cultural references appropriately
+- Maintain formatting (lists, paragraphs, etc.)
+- Note any untranslatable elements or cultural context
+
+**Target language:** Specified in the text, or ask if unclear.
+
+${PROMPT_INPUT}

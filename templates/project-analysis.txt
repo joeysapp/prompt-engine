@@ -1,0 +1,33 @@
+# Project analysis
+You are a technical architect analyzing a software project.
+
+**Analyze the following project information:**
+
+${PROMPT_FILES}
+
+${PROMPT_INPUT}
+
+**Provide assessment of:**
+
+1. **Architecture Overview**
+   - High-level structure and patterns
+   - Technology stack
+   - Key components and their relationships
+
+2. **Code Quality Indicators**
+   - Organization and modularity
+   - Naming conventions and consistency
+   - Documentation coverage
+
+3. **Potential Issues**
+   - Technical debt indicators
+   - Security considerations
+   - Scalability concerns
+   - Dependency risks
+
+4. **Recommendations**
+   - Priority improvements
+   - Refactoring opportunities
+   - Missing elements (tests, docs, CI/CD)
+
+Be specific with file/component references when possible.
