@@ -207,12 +207,35 @@ EOF
 # Directory Initialization
 ############################################
 
+# Get the directory where this script lives
+SCRIPT_DIR="${0:A:h}"
+
 init_directories() {
   mkdir -p "$TEMPLATE_DIR" "$SESSION_DIR" "$OUT_DIR"
 
-  # Create default blank template if it doesn't exist
-  if [[ ! -f "$TEMPLATE_DIR/blank.txt" ]]; then
-    echo '${PROMPT_INPUT}' > "$TEMPLATE_DIR/blank.txt"
+  # Check if templates need to be initialized
+  local template_count
+  template_count=$(find "$TEMPLATE_DIR" -name '*.txt' 2>/dev/null | wc -l | tr -d ' ')
+
+  if [[ "$template_count" -eq 0 ]]; then
+    # Look for templates in the script's directory
+    local repo_templates="${SCRIPT_DIR}/templates"
+
+    if [[ -d "$repo_templates" ]] && [[ -n "$(ls -A "$repo_templates"/*.txt 2>/dev/null)" ]]; then
+      info "First run: copying templates to $TEMPLATE_DIR"
+      cp "$repo_templates"/*.txt "$TEMPLATE_DIR/"
+      info "Copied $(ls "$TEMPLATE_DIR"/*.txt 2>/dev/null | wc -l | tr -d ' ') templates"
+    else
+      # No repo templates found, create minimal blank template
+      info "Creating default template in $TEMPLATE_DIR"
+      echo '${PROMPT_INPUT}' > "$TEMPLATE_DIR/blank.txt"
+    fi
+  fi
+
+  # Copy example targets config if user doesn't have one
+  local targets_example="${SCRIPT_DIR}/targets.conf.example"
+  if [[ ! -f "$TARGETS_FILE" ]] && [[ -f "$targets_example" ]]; then
+    info "Tip: Copy $targets_example to $TARGETS_FILE to configure remote targets"
   fi
 }
 
