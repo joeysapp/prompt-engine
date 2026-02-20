@@ -493,6 +493,14 @@ build_options_json() {
 # Media Handling
 ############################################
 
+# TODO: Add automatic frame extraction for video files (webm, mp4, mov, gif, etc.)
+# Currently topic.sh handles this with ffmpeg - should live here instead so all
+# prompt-engine consumers get video support automatically. Implementation:
+# - Detect video file by extension
+# - Extract frame using: ffmpeg -i "$file" -vf "select=eq(n\,0)" -frames:v 1 -q:v 2 "$tmp_frame"
+# - Cache extracted frames by file hash to avoid re-extraction
+# - Pass extracted frame to Ollama instead of raw video bytes
+
 # Encode file to base64
 encode_media_base64() {
   local file="$1"
@@ -502,29 +510,29 @@ encode_media_base64() {
   base64 -i "$file" 2>/dev/null || base64 "$file" 2>/dev/null || die "Failed to encode: $file"
 }
 
-# Build images array for API request
+# Build images array for API request - streams to stdout to avoid variable size limits
 build_images_json() {
   if [[ ${#MEDIA_FILES[@]} -eq 0 ]]; then
     echo "[]"
     return
   fi
 
-  local images_json="["
+  printf '['
   local first=true
 
   for media_file in "${MEDIA_FILES[@]}"; do
     if [[ "$first" == "true" ]]; then
       first=false
     else
-      images_json+=","
+      printf ','
     fi
-    local encoded
-    encoded=$(encode_media_base64 "$media_file")
-    images_json+="\"$encoded\""
+    # Stream base64 directly to stdout with quotes
+    printf '"'
+    base64 -i "$media_file" 2>/dev/null | tr -d '\n' || base64 "$media_file" 2>/dev/null | tr -d '\n' || die "Failed to encode: $media_file"
+    printf '"'
   done
 
-  images_json+="]"
-  echo "$images_json"
+  printf ']'
 }
 
 # Validate media files exist and are supported
@@ -604,34 +612,38 @@ run_http() {
   local opts_json
   opts_json=$(build_options_json)
 
-  local images_json="[]"
+  # Build payload using temp files to avoid ARG_MAX limits with large media
+  local tmp_payload="/tmp/prompt-engine-payload-$$.json"
+  local tmp_images="/tmp/prompt-engine-images-$$.json"
+
+  # Write images to temp file (can be large base64 data)
   if [[ ${#MEDIA_FILES[@]} -gt 0 ]]; then
-    images_json=$(build_images_json)
+    build_images_json > "$tmp_images"
+  else
+    echo '[]' > "$tmp_images"
   fi
 
+  # Build payload using slurpfile for large data
   local payload
   if [[ -n "$FORMAT_SCHEMA" ]]; then
-    # Include format parameter for structured output
     if [[ "$FORMAT_SCHEMA" == "json" ]]; then
-      # Basic JSON mode - pass as string
       payload=$(jq -n \
         --arg model "$MODEL" \
         --arg prompt "$FINAL_PROMPT" \
         --argjson stream "$STREAM" \
         --argjson options "$opts_json" \
-        --argjson images "$images_json" \
+        --slurpfile images "$tmp_images" \
         --arg format "json" \
-        '{model:$model, prompt:$prompt, options:$options, stream:$stream, images:$images, format:$format}')
+        '{model:$model, prompt:$prompt, options:$options, stream:$stream, images:$images[0], format:$format}')
     else
-      # JSON schema - pass as object
       payload=$(jq -n \
         --arg model "$MODEL" \
         --arg prompt "$FINAL_PROMPT" \
         --argjson stream "$STREAM" \
         --argjson options "$opts_json" \
-        --argjson images "$images_json" \
+        --slurpfile images "$tmp_images" \
         --argjson format "$FORMAT_SCHEMA" \
-        '{model:$model, prompt:$prompt, options:$options, stream:$stream, images:$images, format:$format}')
+        '{model:$model, prompt:$prompt, options:$options, stream:$stream, images:$images[0], format:$format}')
     fi
   else
     payload=$(jq -n \
@@ -639,13 +651,16 @@ run_http() {
       --arg prompt "$FINAL_PROMPT" \
       --argjson stream "$STREAM" \
       --argjson options "$opts_json" \
-      --argjson images "$images_json" \
-      '{model:$model, prompt:$prompt, options:$options, stream:$stream, images:$images}')
+      --slurpfile images "$tmp_images" \
+      '{model:$model, prompt:$prompt, options:$options, stream:$stream, images:$images[0]}')
   fi
+
+  # Write payload to file to avoid shell arg limits
+  echo "$payload" > "$tmp_payload"
 
   local response
   response=$(curl -sS -H 'Content-Type: application/json' \
-    -d "$payload" \
+    -d "@$tmp_payload" \
     "$base/api/generate" 2>/dev/null) || die "Failed to connect to $base"
 
   # Sanitize control characters (keep tab, newline, carriage return)
@@ -655,6 +670,9 @@ run_http() {
   # Check for API errors
   local error_msg
   error_msg=$(printf '%s' "$sanitized" | jq -r '.error // empty' 2>/dev/null)
+  # Cleanup temp files
+  rm -f "$tmp_payload" "$tmp_images" 2>/dev/null
+
   if [[ -n "$error_msg" ]]; then
     echo "error: $error_msg" >&2
     if [[ "$error_msg" == *"not found"* ]]; then
