@@ -103,6 +103,10 @@ MEDIA_FILES=()
 INCLUDE_FILES=()
 EXCLUDES=()
 
+# JSON schema format for structured output
+# Can be "json" for basic JSON mode, or a JSON schema object
+FORMAT_SCHEMA=""
+
 ############################################
 # Utilities
 ############################################
@@ -149,9 +153,13 @@ Media Options (for vision/multimodal models):
   --audio PATH            Include audio file (repeatable)
 
 Output Options:
-  -j, --json              Emit structured JSON output
+  -j, --json              Emit structured JSON output (wrapper metadata)
   -c, --copy              Copy result to clipboard (macOS)
   -n, --dry-run           Print prompt without executing
+  --format MODE|FILE      Force structured output from model:
+                          "json" - basic JSON mode
+                          FILE   - JSON schema file path
+                          SCHEMA - inline JSON schema
 
 Model Information:
   --models                List available models on target
@@ -200,6 +208,13 @@ Examples:
   # Multi-turn conversation
   prompt-engine -s myproject "What files should I look at?"
   prompt-engine -s myproject "Now explain the main function"
+
+  # Structured JSON output with schema
+  prompt-engine --format '{"type":"object","properties":{"rating":{"type":"number"}}}' \
+    "Rate this code quality 1-10"
+
+  # Using a schema file
+  prompt-engine --format ~/schemas/rating.json --image photo.jpg -t image-rating
 EOF
 }
 
@@ -595,13 +610,38 @@ run_http() {
   fi
 
   local payload
-  payload=$(jq -n \
-    --arg model "$MODEL" \
-    --arg prompt "$FINAL_PROMPT" \
-    --argjson stream "$STREAM" \
-    --argjson options "$opts_json" \
-    --argjson images "$images_json" \
-    '{model:$model, prompt:$prompt, options:$options, stream:$stream, images:$images}')
+  if [[ -n "$FORMAT_SCHEMA" ]]; then
+    # Include format parameter for structured output
+    if [[ "$FORMAT_SCHEMA" == "json" ]]; then
+      # Basic JSON mode - pass as string
+      payload=$(jq -n \
+        --arg model "$MODEL" \
+        --arg prompt "$FINAL_PROMPT" \
+        --argjson stream "$STREAM" \
+        --argjson options "$opts_json" \
+        --argjson images "$images_json" \
+        --arg format "json" \
+        '{model:$model, prompt:$prompt, options:$options, stream:$stream, images:$images, format:$format}')
+    else
+      # JSON schema - pass as object
+      payload=$(jq -n \
+        --arg model "$MODEL" \
+        --arg prompt "$FINAL_PROMPT" \
+        --argjson stream "$STREAM" \
+        --argjson options "$opts_json" \
+        --argjson images "$images_json" \
+        --argjson format "$FORMAT_SCHEMA" \
+        '{model:$model, prompt:$prompt, options:$options, stream:$stream, images:$images, format:$format}')
+    fi
+  else
+    payload=$(jq -n \
+      --arg model "$MODEL" \
+      --arg prompt "$FINAL_PROMPT" \
+      --argjson stream "$STREAM" \
+      --argjson options "$opts_json" \
+      --argjson images "$images_json" \
+      '{model:$model, prompt:$prompt, options:$options, stream:$stream, images:$images}')
+  fi
 
   local response
   response=$(curl -sS -H 'Content-Type: application/json' \
@@ -735,6 +775,19 @@ while [[ $# -gt 0 ]]; do
       ;;
     -j|--json) JSON=true; shift ;;
     -c|--copy) COPY=true; shift ;;
+    --format)
+      # Accept "json" for basic mode, a file path, or inline JSON schema
+      if [[ "$2" == "json" ]]; then
+        FORMAT_SCHEMA="json"
+      elif [[ -f "$2" ]]; then
+        # Read schema from file
+        FORMAT_SCHEMA=$(cat "$2") || die "Failed to read format schema: $2"
+      else
+        # Assume inline JSON
+        FORMAT_SCHEMA="$2"
+      fi
+      shift 2
+      ;;
     -h|--help) usage; exit 0 ;;
     --) shift; break ;;
     -*) die "Unknown option: $1" ;;
