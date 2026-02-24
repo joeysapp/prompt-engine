@@ -1,0 +1,18 @@
+# Log error extraction
+Extract and analyze errors from log content.
+
+**Find and report:**
+- Error messages with timestamps
+- Stack traces or error contexts
+- Warning messages
+- Patterns in recurring errors
+
+**For each error:**
+1. Timestamp (if available)
+2. Error message
+3. Severity (critical, error, warning)
+4. Suggested cause or fix
+
+${PROMPT_FILES}
+
+${PROMPT_INPUT}

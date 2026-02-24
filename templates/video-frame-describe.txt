@@ -1,0 +1,16 @@
+# Video frame description
+Describe this video frame as part of a sequence.
+
+**Focus on:**
+- Current scene and subjects
+- Actions or movement occurring
+- Changes from previous context (if provided)
+- Key visual elements
+
+**Output:**
+Provide a concise but detailed description suitable for building a video summary.
+
+Previous context:
+${PROMPT_HISTORY}
+
+${PROMPT_INPUT}

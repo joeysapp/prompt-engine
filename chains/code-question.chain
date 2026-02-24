@@ -1,0 +1,79 @@
+# Code Question Chain
+# Aggregates analysis from multiple files to answer a question
+name: code-question
+description: Analyze multiple code files and synthesize an answer to a question
+
+params:
+  - name: QUESTION
+    required: true
+    description: The question about the codebase
+  - name: CONTEXT
+    required: false
+    default: ""
+    description: Additional context about the project
+
+steps:
+  # Step 1: First pass - categorize and rank files
+  - name: rank-files
+    template: blank
+    format: '{"type":"object","properties":{"highly_relevant":{"type":"array","items":{"type":"string"}},"somewhat_relevant":{"type":"array","items":{"type":"string"}},"not_relevant":{"type":"array","items":{"type":"string"}}}}'
+    input: |
+      Question: ${QUESTION}
+      Context: ${CONTEXT}
+
+      Files in directory:
+      ${INPUT}
+
+      Categorize these files by their likely relevance to the question.
+      Consider:
+      - File names and what they suggest about content
+      - Common patterns (routes, models, controllers, utils, tests)
+      - The specific question being asked
+    output: FILE_RANKINGS
+
+  # Step 2: Analyze individual files (uses code-analyze.chain as sub-chain)
+  # Note: In practice, this step would iterate over highly_relevant files
+  - name: analyze-files
+    template: blank
+    input: |
+      The following files have been analyzed:
+      ${FILE_RANKINGS}
+
+      Individual file analyses will be accumulated here by the chain runner.
+    output: FILE_ANALYSES
+
+  # Step 3: Synthesize findings
+  - name: synthesize
+    template: blank
+    input: |
+      Question: ${QUESTION}
+      Context: ${CONTEXT}
+
+      File Rankings: ${FILE_RANKINGS}
+      File Analyses: ${FILE_ANALYSES}
+
+      Based on all the analyzed files, synthesize a comprehensive answer to the question.
+
+      Structure your response:
+      1. Direct Answer: Address the question directly
+      2. Key Files: List the most relevant files and why
+      3. Code References: Include specific code snippets or line references
+      4. Additional Insights: Any related findings or suggestions
+    output: SYNTHESIS
+
+  # Step 4: Generate final answer
+  - name: final-answer
+    template: blank
+    format: '{"type":"object","properties":{"answer":{"type":"string"},"confidence":{"type":"number","minimum":0,"maximum":100},"key_files":{"type":"array","items":{"type":"object","properties":{"file":{"type":"string"},"relevance":{"type":"string"}}}},"code_references":{"type":"array","items":{"type":"string"}},"suggestions":{"type":"array","items":{"type":"string"}}},"required":["answer","confidence","key_files"]}'
+    input: |
+      Question: ${QUESTION}
+
+      Synthesis: ${SYNTHESIS}
+
+      Generate a final structured answer including:
+      1. The answer to the question
+      2. Your confidence level (0-100%)
+      3. The key files that informed this answer
+      4. Specific code references (file:line format)
+      5. Any suggestions for further investigation
+    output: FINAL_ANSWER

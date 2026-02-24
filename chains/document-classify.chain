@@ -1,0 +1,111 @@
+# Document Classification Chain
+# Classifies documents into categories with confidence scores
+name: document-classify
+description: Classify documents into categories with confidence scores and rationale
+
+params:
+  - name: CATEGORIES
+    required: false
+    default: "technical, business, legal, marketing, personal, other"
+    description: Comma-separated list of categories to classify into
+  - name: CUSTOM_RULES
+    required: false
+    default: ""
+    description: Custom classification rules or context
+
+steps:
+  # Step 1: Initial content analysis
+  - name: analyze-content
+    template: blank
+    format: '{"type":"object","properties":{"document_type":{"type":"string"},"language":{"type":"string"},"length_category":{"type":"string"},"key_topics":{"type":"array","items":{"type":"string"}},"formality":{"type":"string"},"has_code":{"type":"boolean"},"has_data":{"type":"boolean"}},"required":["document_type","key_topics","formality"]}'
+    input: |
+      Analyze this document's characteristics:
+
+      ${INPUT}
+
+      Determine:
+      1. Document type (email, report, code, article, memo, etc.)
+      2. Primary language
+      3. Length category (brief, moderate, long)
+      4. Key topics (3-5 main subjects)
+      5. Formality level (formal, semi-formal, informal)
+      6. Contains code snippets? (true/false)
+      7. Contains structured data/tables? (true/false)
+    output: CONTENT_ANALYSIS
+
+  # Step 2: Extract key phrases and entities
+  - name: extract-entities
+    template: blank
+    format: '{"type":"object","properties":{"entities":{"type":"array","items":{"type":"object","properties":{"name":{"type":"string"},"type":{"type":"string"}}}},"key_phrases":{"type":"array","items":{"type":"string"}},"action_items":{"type":"array","items":{"type":"string"}}}}'
+    input: |
+      Extract key information from this document:
+
+      ${INPUT}
+
+      Find:
+      1. Named entities (people, organizations, products, locations)
+      2. Key phrases that define the document's purpose
+      3. Any action items or requests
+    output: ENTITIES
+
+  # Step 3: Classify into categories
+  - name: classify
+    template: blank
+    format: '{"type":"object","properties":{"primary_category":{"type":"string"},"secondary_categories":{"type":"array","items":{"type":"string"}},"confidence":{"type":"number","minimum":0,"maximum":100},"classification_rationale":{"type":"string"}},"required":["primary_category","confidence","classification_rationale"]}'
+    input: |
+      Available Categories: ${CATEGORIES}
+      Custom Rules: ${CUSTOM_RULES}
+
+      Document Analysis:
+      ${CONTENT_ANALYSIS}
+
+      Extracted Entities:
+      ${ENTITIES}
+
+      Original Document:
+      ${INPUT}
+
+      Classify this document:
+      1. Primary category (from the available categories)
+      2. Secondary categories if applicable
+      3. Confidence score (0-100%)
+      4. Brief rationale for the classification
+    output: CLASSIFICATION
+
+  # Step 4: Generate metadata and tags
+  - name: generate-metadata
+    template: blank
+    format: '{"type":"object","properties":{"suggested_filename":{"type":"string"},"tags":{"type":"array","items":{"type":"string"}},"priority":{"type":"string"},"retention_suggestion":{"type":"string"}}}'
+    input: |
+      Content Analysis: ${CONTENT_ANALYSIS}
+      Classification: ${CLASSIFICATION}
+      Entities: ${ENTITIES}
+
+      Generate organizational metadata:
+      1. Suggested filename (descriptive, no spaces)
+      2. Tags for searchability (5-10 tags)
+      3. Priority level (high, medium, low)
+      4. Retention suggestion (archive, keep, review, delete)
+    output: METADATA
+
+  # Step 5: Final classification report
+  - name: final-report
+    template: blank
+    format: '{"type":"object","properties":{"file":{"type":"string"},"primary_category":{"type":"string"},"secondary_categories":{"type":"array","items":{"type":"string"}},"confidence":{"type":"number"},"summary":{"type":"string"},"tags":{"type":"array","items":{"type":"string"}},"key_entities":{"type":"array","items":{"type":"string"}},"suggested_action":{"type":"string"}},"required":["primary_category","confidence","summary","tags"]}'
+    input: |
+      File: ${INPUT_FILENAME}
+
+      Complete Analysis:
+      - Content: ${CONTENT_ANALYSIS}
+      - Classification: ${CLASSIFICATION}
+      - Entities: ${ENTITIES}
+      - Metadata: ${METADATA}
+
+      Generate a final classification report with:
+      1. Primary and secondary categories
+      2. Confidence score
+      3. One-sentence summary
+      4. Tags for organization
+      5. Key entities mentioned
+      6. Suggested action (file, respond, review, archive)
+    output: FINAL_REPORT

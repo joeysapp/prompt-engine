@@ -1,0 +1,75 @@
+# Batch Rating Chain
+# Rates and ranks multiple items against criteria
+name: batch-rate
+description: Rate and rank multiple documents or files against specified criteria
+
+params:
+  - name: CRITERIA
+    required: true
+    description: The criteria to rate against (e.g., "relevance to machine learning")
+  - name: SCALE
+    required: false
+    default: "1-10"
+    description: Rating scale to use
+  - name: TOP_N
+    required: false
+    default: "5"
+    description: Number of top items to highlight
+
+steps:
+  # Step 1: Analyze the item
+  - name: analyze-item
+    template: blank
+    format: '{"type":"object","properties":{"summary":{"type":"string"},"key_features":{"type":"array","items":{"type":"string"}},"strengths":{"type":"array","items":{"type":"string"}},"weaknesses":{"type":"array","items":{"type":"string"}}},"required":["summary","key_features"]}'
+    input: |
+      Item: ${INPUT_FILENAME}
+
+      Content:
+      ${INPUT}
+
+      Analyze this item and identify:
+      1. A brief summary (1-2 sentences)
+      2. Key features or characteristics
+      3. Strengths
+      4. Weaknesses
+    output: ANALYSIS
+
+  # Step 2: Rate against criteria
+  - name: rate-item
+    template: blank
+    format: '{"type":"object","properties":{"score":{"type":"number"},"confidence":{"type":"number","minimum":0,"maximum":100},"rationale":{"type":"string"},"matching_aspects":{"type":"array","items":{"type":"string"}},"missing_aspects":{"type":"array","items":{"type":"string"}}},"required":["score","rationale"]}'
+    input: |
+      Criteria: ${CRITERIA}
+      Scale: ${SCALE}
+
+      Item: ${INPUT_FILENAME}
+      Analysis: ${ANALYSIS}
+
+      Full Content:
+      ${INPUT}
+
+      Rate this item against the criteria:
+      1. Score on the ${SCALE} scale
+      2. Your confidence in this rating (0-100%)
+      3. Rationale for the score
+      4. Which aspects of the criteria does it match?
+      5. Which aspects are missing?
+    output: RATING
+
+  # Step 3: Generate item report
+  - name: item-report
+    template: blank
+    format: '{"type":"object","properties":{"filename":{"type":"string"},"score":{"type":"number"},"summary":{"type":"string"},"rationale":{"type":"string"},"rank_recommendation":{"type":"string"}},"required":["filename","score","summary"]}'
+    input: |
+      File: ${INPUT_FILENAME}
+      Index: ${INDEX}
+      Analysis: ${ANALYSIS}
+      Rating: ${RATING}
+
+      Generate a concise report:
+      1. Filename
+      2. Final score
+      3. One-line summary
+      4. Key rationale
+      5. Rank recommendation (top, middle, bottom tier)
+    output: ITEM_REPORT

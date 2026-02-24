@@ -1,0 +1,85 @@
+# Relevance Search Chain
+# Analyzes documents to determine relevance to a search query
+name: relevance-search
+description: Analyze a document and rate its relevance to a search query
+
+params:
+  - name: QUERY
+    required: true
+    description: The search query to match against
+  - name: REQUIREMENTS
+    required: false
+    default: ""
+    description: Additional requirements or context for the search
+
+steps:
+  # Step 1: Extract tags from the document
+  - name: extract-tags
+    template: tags
+    input: ${INPUT}
+    output: TAGS
+    format: '{"type":"object","properties":{"tags":{"type":"array","items":{"type":"string"}}},"required":["tags"]}'
+
+  # Step 2: Generate a description/summary
+  - name: summarize
+    template: summarize-brief
+    input: ${INPUT}
+    output: SUMMARY
+
+  # Step 3: Rate document quality/completeness
+  - name: rate-quality
+    template: blank
+    format: '{"type":"object","properties":{"quality":{"type":"number","minimum":1,"maximum":10},"completeness":{"type":"number","minimum":1,"maximum":10},"clarity":{"type":"number","minimum":1,"maximum":10}},"required":["quality","completeness","clarity"]}'
+    input: |
+      Rate this document on a scale of 1-10 for:
+      - quality: How well-written and informative is it?
+      - completeness: How thorough is the coverage?
+      - clarity: How easy is it to understand?
+
+      Document:
+      ${INPUT}
+    output: RATINGS
+
+  # Step 4: Analyze relevance to search query
+  - name: analyze-relevance
+    template: blank
+    format: '{"type":"object","properties":{"relevance_score":{"type":"number","minimum":0,"maximum":100},"match_reasons":{"type":"array","items":{"type":"string"}},"key_matches":{"type":"array","items":{"type":"string"}},"missing_aspects":{"type":"array","items":{"type":"string"}}},"required":["relevance_score","match_reasons"]}'
+    input: |
+      Search Query: ${QUERY}
+      Additional Requirements: ${REQUIREMENTS}
+
+      Document Tags: ${TAGS}
+      Document Summary: ${SUMMARY}
+      Document Ratings: ${RATINGS}
+
+      Full Document:
+      ${INPUT}
+
+      Analyze how relevant this document is to the search query.
+
+      Provide:
+      1. A relevance score from 0-100
+      2. Reasons why it matches (or doesn't match)
+      3. Key matching terms or concepts
+      4. Any aspects from the query that are missing
+    output: RELEVANCE
+
+  # Step 5: Generate final report
+  - name: final-report
+    template: blank
+    format: '{"type":"object","properties":{"file":{"type":"string"},"query":{"type":"string"},"relevance_score":{"type":"number"},"recommendation":{"type":"string"},"summary":{"type":"string"},"tags":{"type":"array","items":{"type":"string"}},"ratings":{"type":"object"}},"required":["relevance_score","recommendation","summary"]}'
+    input: |
+      Generate a final relevance report:
+
+      File: ${INPUT_FILENAME}
+      Query: ${QUERY}
+      Tags: ${TAGS}
+      Summary: ${SUMMARY}
+      Ratings: ${RATINGS}
+      Relevance Analysis: ${RELEVANCE}
+
+      Provide a final structured report with:
+      1. The relevance score (0-100)
+      2. A recommendation: "highly relevant", "somewhat relevant", "marginally relevant", or "not relevant"
+      3. A one-sentence summary of why
+    output: FINAL_RESULT

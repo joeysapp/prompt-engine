@@ -1,0 +1,113 @@
+# Image Story Chain
+# Creates a creative story or poem from an image
+name: image-story
+description: Generate a creative story or poem based on an image
+
+params:
+  - name: STYLE
+    required: false
+    default: story
+    description: Output style (story, poem, haiku, limerick, description)
+  - name: TONE
+    required: false
+    default: neutral
+    description: Tone of the output (dark, whimsical, romantic, humorous, neutral)
+  - name: LENGTH
+    required: false
+    default: medium
+    description: Output length (short, medium, long)
+  - name: MODEL
+    required: false
+    default: minicpm-v
+    description: Vision model for image analysis
+
+steps:
+  # Step 1: Detailed image description
+  - name: describe-image
+    template: image-describe
+    model: ${MODEL}
+    image: ${INPUT_FILE}
+    input: Provide an extremely detailed description of this image. Include colors, composition, mood, and any narrative elements you can infer.
+    output: IMAGE_DESC
+
+  # Step 2: Extract emotional/thematic elements
+  - name: extract-themes
+    template: blank
+    format: '{"type":"object","properties":{"dominant_emotion":{"type":"string"},"themes":{"type":"array","items":{"type":"string"}},"symbols":{"type":"array","items":{"type":"string"}},"story_potential":{"type":"array","items":{"type":"string"}},"color_mood":{"type":"string"}},"required":["dominant_emotion","themes"]}'
+    input: |
+      Image Description: ${IMAGE_DESC}
+
+      Analyze the emotional and thematic content:
+      1. What is the dominant emotion conveyed?
+      2. What themes are present? (love, loss, adventure, peace, etc.)
+      3. Are there any symbolic elements?
+      4. What story possibilities does this image suggest?
+      5. What mood do the colors create?
+    output: THEMES
+
+  # Step 3: Generate creative outline
+  - name: create-outline
+    template: blank
+    input: |
+      Image Description: ${IMAGE_DESC}
+      Themes: ${THEMES}
+
+      Style: ${STYLE}
+      Tone: ${TONE}
+      Length: ${LENGTH}
+
+      Create an outline for a ${STYLE} based on this image:
+      - If story: beginning, middle, end
+      - If poem: stanzas and key imagery
+      - If haiku: the three lines' focus
+      - If limerick: the setup and punchline
+      - If description: key paragraphs
+
+      The ${TONE} tone should influence word choice and mood.
+    output: OUTLINE
+
+  # Step 4: Write first draft
+  - name: first-draft
+    template: blank
+    input: |
+      Write a ${STYLE} based on this image.
+
+      Image Description: ${IMAGE_DESC}
+      Themes: ${THEMES}
+      Outline: ${OUTLINE}
+
+      Style: ${STYLE}
+      Tone: ${TONE}
+      Length: ${LENGTH}
+
+      Guidelines:
+      - Capture the essence of the image
+      - Use vivid, sensory language
+      - Maintain the ${TONE} tone throughout
+      - ${LENGTH} length (short=50-100 words, medium=100-300 words, long=300+ words)
+      - If poem/haiku/limerick: follow proper form
+
+      Write the ${STYLE} now:
+    output: FIRST_DRAFT
+
+  # Step 5: Polish and finalize
+  - name: polish
+    template: blank
+    format: '{"type":"object","properties":{"title":{"type":"string"},"content":{"type":"string"},"style":{"type":"string"},"word_count":{"type":"number"},"inspired_by":{"type":"string"}},"required":["title","content"]}'
+    input: |
+      First Draft:
+      ${FIRST_DRAFT}
+
+      Polish this ${STYLE}:
+      1. Refine language and flow
+      2. Ensure the ${TONE} tone is consistent
+      3. Add a fitting title
+      4. Check proper form (if poem/haiku/limerick)
+
+      Return the final polished version with:
+      - title: A fitting title
+      - content: The polished ${STYLE}
+      - style: ${STYLE}
+      - word_count: Approximate word count
+      - inspired_by: Brief note on what in the image inspired this
+    output: FINAL_WORK

@@ -1,0 +1,18 @@
+# Code file summary
+Analyze this code and provide a structured summary.
+
+**Include:**
+- File purpose and role in the project
+- Key functions, classes, or exports
+- Dependencies and imports
+- Notable patterns or techniques used
+
+**Format:**
+- Purpose: [one-line description]
+- Type: [module, component, utility, test, config, etc.]
+- Key exports: [list main exports]
+- Dependencies: [external libraries used]
+
+${PROMPT_FILES}
+
+${PROMPT_INPUT}

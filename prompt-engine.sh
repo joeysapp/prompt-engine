@@ -215,6 +215,13 @@ Examples:
 
   # Using a schema file
   prompt-engine --format ~/schemas/rating.json --image photo.jpg -t image-rating
+
+Chain Mode (Multi-step pipelines):
+  prompt-chain relevance-search.chain -i doc.txt -p QUERY="machine learning"
+  prompt-chain code-analyze.chain -d ./src -g "*.js" -p QUESTION="Where is auth?"
+  prompt-chain video-describe.chain -i video.mp4
+  prompt-chain --list   # List available chains
+  prompt-chain --help   # Full chain mode documentation
 EOF
 }
 
@@ -656,7 +663,7 @@ run_http() {
   fi
 
   # Write payload to file to avoid shell arg limits
-  echo "$payload" > "$tmp_payload"
+  printf "%s" "$payload" > "$tmp_payload"
 
   local response
   response=$(curl -sS -H 'Content-Type: application/json' \

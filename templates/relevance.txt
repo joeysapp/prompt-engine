@@ -1,0 +1,18 @@
+# Relevance assessment
+Assess the relevance of this content to a given query or criteria.
+
+**Your task:**
+1. Analyze the content thoroughly
+2. Compare it against the criteria
+3. Score relevance from 0-100%
+4. Explain your reasoning
+
+**Consider:**
+- Direct mentions or discussions of the query topic
+- Related concepts and terminology
+- Depth of coverage
+- Applicability and usefulness
+
+${PROMPT_FILES}
+
+${PROMPT_INPUT}

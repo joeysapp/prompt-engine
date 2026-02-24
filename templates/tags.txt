@@ -10,4 +10,6 @@ Generate relevant tags/keywords for the following content.
 
 **Output format:** tag1, tag2, tag3, tag4, tag5
 
+${PROMPT_FILES}
+
 ${PROMPT_INPUT}

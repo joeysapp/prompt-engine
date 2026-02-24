@@ -1,0 +1,85 @@
+# Synthesize Answer Chain
+# Takes accumulated file reports and generates a final answer
+# This is run AFTER aggregate-answer.chain completes on a directory
+name: synthesize-answer
+description: Synthesize a final answer from multiple file analyses
+
+params:
+  - name: QUESTION
+    required: true
+    description: The original question
+  - name: REPORTS_FILE
+    required: true
+    description: Path to file containing accumulated reports (JSON lines)
+
+steps:
+  # Step 1: Load and parse accumulated reports
+  - name: load-reports
+    template: blank
+    format: '{"type":"object","properties":{"total_files":{"type":"number"},"relevant_files":{"type":"number"},"top_files":{"type":"array","items":{"type":"object","properties":{"filename":{"type":"string"},"score":{"type":"number"},"summary":{"type":"string"}}}}}}'
+    input: |
+      Parse these file analysis reports and identify the most relevant files:
+
+      Reports:
+      ${INPUT}
+
+      Return:
+      1. Total number of files analyzed
+      2. Number of relevant files
+      3. Top relevant files (sorted by score, max 10)
+    output: PARSED_REPORTS
+
+  # Step 2: Extract key insights
+  - name: extract-insights
+    template: blank
+    format: '{"type":"object","properties":{"key_insights":{"type":"array","items":{"type":"string"}},"patterns":{"type":"array","items":{"type":"string"}},"gaps":{"type":"array","items":{"type":"string"}}}}'
+    input: |
+      Question: ${QUESTION}
+
+      File Reports Summary: ${PARSED_REPORTS}
+
+      Full Reports:
+      ${INPUT}
+
+      Extract:
+      1. Key insights that help answer the question
+      2. Patterns across files
+      3. Gaps - what's missing or unclear
+    output: INSIGHTS
+
+  # Step 3: Generate comprehensive answer
+  - name: generate-answer
+    template: blank
+    input: |
+      Question: ${QUESTION}
+
+      Analysis Summary: ${PARSED_REPORTS}
+      Key Insights: ${INSIGHTS}
+
+      Generate a comprehensive answer that:
+      1. Directly addresses the question
+      2. References specific files and code sections
+      3. Explains the reasoning
+      4. Notes any caveats or uncertainties
+
+      Structure the answer clearly with sections if appropriate.
+    output: ANSWER
+
+  # Step 4: Final structured output
+  - name: final-output
+    template: blank
+    format: '{"type":"object","properties":{"question":{"type":"string"},"answer":{"type":"string"},"confidence":{"type":"number","minimum":0,"maximum":100},"key_files":{"type":"array","items":{"type":"string"}},"code_references":{"type":"array","items":{"type":"object","properties":{"file":{"type":"string"},"description":{"type":"string"}}}},"follow_up_suggestions":{"type":"array","items":{"type":"string"}}},"required":["question","answer","confidence","key_files"]}'
+    input: |
+      Question: ${QUESTION}
+      Answer: ${ANSWER}
+      Reports: ${PARSED_REPORTS}
+      Insights: ${INSIGHTS}
+
+      Generate final structured output:
+      1. The original question
+      2. The comprehensive answer
+      3. Confidence level (0-100%)
+      4. List of key files that informed the answer
+      5. Specific code references
+      6. Suggestions for follow-up investigation
+    output: FINAL_OUTPUT

@@ -1,0 +1,74 @@
+# Code Analysis Chain
+# Analyzes code files to answer questions or find relevant code
+name: code-analyze
+description: Analyze code files to answer questions and find relevant implementations
+
+params:
+  - name: QUESTION
+    required: true
+    description: The question about the codebase
+  - name: CONTEXT
+    required: false
+    default: ""
+    description: Additional context about the project
+
+steps:
+  # Step 1: Analyze file structure and purpose
+  - name: analyze-file
+    template: blank
+    format: '{"type":"object","properties":{"file_type":{"type":"string"},"purpose":{"type":"string"},"key_exports":{"type":"array","items":{"type":"string"}},"dependencies":{"type":"array","items":{"type":"string"}},"relevance_to_question":{"type":"number","minimum":0,"maximum":10}},"required":["file_type","purpose","relevance_to_question"]}'
+    input: |
+      Question: ${QUESTION}
+      Context: ${CONTEXT}
+
+      File: ${INPUT_FILENAME}
+
+      Code:
+      ${INPUT}
+
+      Analyze this code file and determine:
+      1. What type of file is this? (module, component, utility, test, config, etc.)
+      2. What is its primary purpose?
+      3. What key functions/classes/exports does it provide?
+      4. What are its main dependencies?
+      5. How relevant is this file to answering the question? (0-10)
+    output: FILE_ANALYSIS
+
+  # Step 2: Extract relevant code snippets
+  - name: extract-relevant
+    template: blank
+    input: |
+      Question: ${QUESTION}
+
+      File Analysis: ${FILE_ANALYSIS}
+
+      Full Code:
+      ${INPUT}
+
+      Based on the question and analysis, extract the most relevant code snippets.
+      Include:
+      - Function/class definitions that relate to the question
+      - Key logic or algorithms
+      - Important variable declarations or configurations
+
+      Format each snippet with its line numbers if possible.
+    output: RELEVANT_SNIPPETS
+    condition: ${FILE_ANALYSIS.relevance_to_question} > 3
+
+  # Step 3: Generate file summary
+  - name: summarize-file
+    template: blank
+    format: '{"type":"object","properties":{"filename":{"type":"string"},"relevance":{"type":"number"},"summary":{"type":"string"},"key_findings":{"type":"array","items":{"type":"string"}},"code_snippets":{"type":"array","items":{"type":"string"}}},"required":["filename","relevance","summary"]}'
+    input: |
+      File: ${INPUT_FILENAME}
+      Question: ${QUESTION}
+
+      Analysis: ${FILE_ANALYSIS}
+      Relevant Snippets: ${RELEVANT_SNIPPETS}
+
+      Generate a summary for this file including:
+      1. The filename
+      2. Relevance score (0-10)
+      3. A brief summary of what this file contributes to answering the question
+      4. Key findings or insights
+    output: FILE_SUMMARY

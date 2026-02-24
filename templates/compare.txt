@@ -1,0 +1,13 @@
+# Comparison analysis
+Compare the provided items and analyze their similarities and differences.
+
+**Analysis structure:**
+1. **Similarities:** What do they have in common?
+2. **Differences:** How do they differ?
+3. **Strengths:** What is each good at?
+4. **Weaknesses:** What are the limitations?
+5. **Recommendation:** Which is better for what use case?
+
+${PROMPT_FILES}
+
+${PROMPT_INPUT}

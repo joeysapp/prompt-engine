@@ -1,0 +1,72 @@
+# Video Description Chain
+# Extracts frames from a video and generates a comprehensive description
+name: video-describe
+description: Analyze video frame-by-frame and generate a summary of what occurs
+
+params:
+  - name: INTERVAL
+    required: false
+    default: 10
+    description: Seconds between frame extractions
+  - name: MODEL
+    required: false
+    default: minicpm-v
+    description: Vision model for frame analysis
+
+steps:
+  # Step 1: Extract frames from video (handled specially by the chain runner)
+  - name: extract-frames
+    template: blank
+    input: Extracting frames from video at ${INTERVAL}s intervals...
+    output: FRAME_STATUS
+
+  # Step 2: Describe first frame (establishes scene)
+  - name: describe-opening
+    template: image-describe
+    model: ${MODEL}
+    image: ${RUN_DIR}/frames/frame_0000_0s.jpg
+    input: Describe the opening scene of this video. Focus on the setting, subjects, and initial state.
+    output: OPENING_DESC
+    format: json
+
+  # Step 3: For each extracted frame, generate tags
+  # This uses foreach which will iterate over all frame files
+  - name: tag-frames
+    template: image-tags
+    model: ${MODEL}
+    foreach: ${RUN_DIR}/frames/*.jpg
+    input: Generate 5 descriptive tags for this video frame.
+    output: FRAME_TAGS
+
+  # Step 4: Describe changes across frames
+  - name: describe-progression
+    template: blank
+    input: |
+      Opening scene: ${OPENING_DESC}
+
+      Frame tags throughout video:
+      ${FRAME_TAGS}
+
+      Based on the opening description and the progression of tags across frames,
+      describe what happens in this video. Focus on:
+      - Main actions or events
+      - Changes in scene or subjects
+      - Overall narrative or purpose
+
+      Provide a coherent 2-3 paragraph description.
+    output: VIDEO_DESCRIPTION
+
+  # Step 5: Generate final summary with metadata
+  - name: final-summary
+    template: blank
+    format: '{"type":"object","properties":{"title":{"type":"string"},"description":{"type":"string"},"tags":{"type":"array","items":{"type":"string"}},"duration_estimate":{"type":"string"},"content_type":{"type":"string"}},"required":["title","description","tags"]}'
+    input: |
+      Video analysis:
+      ${VIDEO_DESCRIPTION}
+
+      Based on this analysis, generate:
+      1. A concise title for this video (5-10 words)
+      2. A brief description (1-2 sentences)
+      3. 5-10 relevant tags
+      4. Estimated content type (tutorial, entertainment, documentary, etc.)
+    output: FINAL_RESULT

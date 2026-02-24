@@ -24,7 +24,7 @@ A powerful CLI for interacting with local LLMs via [Ollama](https://ollama.ai). 
 
 ```bash
 # Clone the repository
-git clone https://github.com/youruser/prompt-engine.git
+git clone https://github.com/joeysapp/prompt-engine.git
 cd prompt-engine
 
 # Make executable
@@ -364,6 +364,121 @@ prompt-engine --check-capabilities -m your-model
 
 # Install a vision model
 ollama pull llava:7b
+```
+
+## Chain Mode (Multi-step Pipelines)
+
+Prompt Engine includes a powerful chain system for running multi-step LLM pipelines. Chains allow you to:
+
+- Run multiple sequential LLM calls
+- Pass outputs between steps as variables
+- Use JSON format for reliable structured output
+- Process entire directories of files
+- Validate outputs between steps
+
+### Quick Start
+
+```bash
+# List available chains
+./prompt-chain.sh --list
+
+# Run a relevance search on a document
+./prompt-chain.sh relevance-search.chain -i document.txt -p QUERY="machine learning"
+
+# Analyze code files in a directory
+./prompt-chain.sh code-analyze.chain -d ./src -g "*.js" -p QUESTION="Where is authentication handled?"
+
+# Describe a video frame by frame
+./prompt-chain.sh video-describe.chain -i video.mp4
+
+# Create a new chain
+./prompt-chain.sh --init my-chain
+```
+
+### Available Chains
+
+| Chain | Description |
+|-------|-------------|
+| `relevance-search` | Analyze documents for relevance to a search query |
+| `code-analyze` | Analyze code files and answer questions |
+| `code-question` | Synthesize answers from multiple code files |
+| `log-analyze` | Find errors and patterns in log files |
+| `document-classify` | Classify documents into categories |
+| `video-describe` | Generate video descriptions from frames |
+| `image-story` | Create stories/poems from images |
+| `batch-rate` | Rate and rank multiple files |
+
+### Chain File Format
+
+Chains are YAML-like files with steps:
+
+```yaml
+name: my-chain
+description: What this chain does
+
+params:
+  - name: QUERY
+    required: true
+    description: The search query
+
+steps:
+  - name: analyze
+    template: tags
+    input: ${INPUT}
+    output: TAGS
+
+  - name: summarize
+    template: summarize
+    input: ${INPUT}
+    output: SUMMARY
+
+  - name: combine
+    template: blank
+    format: '{"type":"object","properties":{"result":{"type":"string"}}}'
+    input: |
+      Tags: ${TAGS}
+      Summary: ${SUMMARY}
+      Query: ${QUERY}
+      Generate a final assessment.
+    output: RESULT
+```
+
+### Chain Variables
+
+| Variable | Description |
+|----------|-------------|
+| `${INPUT}` | Current input file contents |
+| `${INPUT_FILE}` | Path to input file |
+| `${INPUT_FILENAME}` | Input filename |
+| `${PREV}` | Previous step's output |
+| `${INDEX}` | Current file index (batch processing) |
+| `${STEP_NAME}` | Output from a named step |
+
+### Directory Processing
+
+Process all files in a directory:
+
+```bash
+# Analyze all JavaScript files
+./prompt-chain.sh code-analyze.chain -d ./src -g "*.js" -p QUESTION="Find security issues"
+
+# Rate all documents for relevance
+./prompt-chain.sh batch-rate.chain -d ./docs -g "*.md" -p CRITERIA="technical accuracy"
+
+# Classify all log files
+./prompt-chain.sh log-analyze.chain -d ./logs -g "*.log"
+```
+
+### JSON Format for Reliability
+
+Use `--format` in steps to ensure parseable JSON output:
+
+```yaml
+- name: extract-data
+  template: blank
+  format: '{"type":"object","properties":{"score":{"type":"number"},"tags":{"type":"array"}}}'
+  input: Extract structured data from: ${INPUT}
+  output: DATA
 ```
 
 ## License

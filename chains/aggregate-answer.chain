@@ -1,0 +1,103 @@
+# Aggregate Answer Chain
+# Processes multiple files individually, then synthesizes a final answer
+# This is the "agentic" pattern for large codebases/document sets
+name: aggregate-answer
+description: Analyze multiple files and synthesize a comprehensive answer
+
+params:
+  - name: QUESTION
+    required: true
+    description: The question to answer across all files
+  - name: CONTEXT
+    required: false
+    default: ""
+    description: Additional context about the files or project
+  - name: MAX_RELEVANT
+    required: false
+    default: "10"
+    description: Maximum number of relevant files to include in synthesis
+
+# Note: This chain is designed to be run with -d (directory) mode
+# Each file is processed through the first steps, then final steps run once at end
+
+steps:
+  # Step 1: Quick relevance check for each file
+  - name: check-relevance
+    template: blank
+    format: '{"type":"object","properties":{"relevant":{"type":"boolean"},"relevance_score":{"type":"number","minimum":0,"maximum":10},"reason":{"type":"string"},"key_findings":{"type":"array","items":{"type":"string"}}},"required":["relevant","relevance_score"]}'
+    input: |
+      Question: ${QUESTION}
+      Context: ${CONTEXT}
+
+      File: ${INPUT_FILENAME}
+
+      Content (first 2000 chars):
+      ${INPUT}
+
+      Quickly assess:
+      1. Is this file relevant to the question? (true/false)
+      2. Relevance score (0-10)
+      3. Brief reason
+      4. Key findings if relevant (otherwise empty)
+    output: RELEVANCE_CHECK
+
+  # Step 2: Deep analysis (only if relevant)
+  - name: deep-analysis
+    template: blank
+    condition: ${RELEVANCE_CHECK.relevant}
+    format: '{"type":"object","properties":{"file":{"type":"string"},"score":{"type":"number"},"summary":{"type":"string"},"relevant_sections":{"type":"array","items":{"type":"object","properties":{"section":{"type":"string"},"relevance":{"type":"string"}}}},"answer_contribution":{"type":"string"}},"required":["file","score","summary","answer_contribution"]}'
+    input: |
+      Question: ${QUESTION}
+
+      File: ${INPUT_FILENAME}
+      Initial Assessment: ${RELEVANCE_CHECK}
+
+      Full Content:
+      ${INPUT}
+
+      Perform deep analysis:
+      1. Detailed summary of relevant content
+      2. Specific sections that help answer the question
+      3. What this file contributes to the answer
+    output: DEEP_ANALYSIS
+
+  # Step 3: Generate file report (accumulated for final synthesis)
+  - name: file-report
+    template: blank
+    accumulate: true
+    format: '{"type":"object","properties":{"filename":{"type":"string"},"relevant":{"type":"boolean"},"score":{"type":"number"},"summary":{"type":"string"},"contribution":{"type":"string"}}}'
+    input: |
+      File: ${INPUT_FILENAME}
+      Index: ${INDEX}
+
+      Relevance Check: ${RELEVANCE_CHECK}
+      Deep Analysis: ${DEEP_ANALYSIS}
+
+      Generate a concise report:
+      - filename
+      - relevant (true/false)
+      - score (0-10)
+      - summary (if relevant)
+      - contribution (how it helps answer the question)
+    output: FILE_REPORT
+
+  # Step 4: Final synthesis (runs once after all files)
+  - name: synthesize-answer
+    template: blank
+    final: true
+    format: '{"type":"object","properties":{"question":{"type":"string"},"answer":{"type":"string"},"confidence":{"type":"number"},"key_files":{"type":"array","items":{"type":"string"}},"code_references":{"type":"array","items":{"type":"string"}},"follow_up":{"type":"array","items":{"type":"string"}}},"required":["question","answer","confidence","key_files"]}'
+    input: |
+      Question: ${QUESTION}
+      Context: ${CONTEXT}
+
+      All File Reports:
+      ${FILE_REPORT_all}
+
+      Based on all the file analyses above, synthesize a comprehensive answer:
+
+      1. Directly answer the question
+      2. Reference specific files that contributed to the answer
+      3. Include relevant code snippets or line references
+      4. Rate your confidence (0-100%)
+      5. Suggest follow-up questions if applicable
+    output: FINAL_ANSWER

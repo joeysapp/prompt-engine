@@ -1,0 +1,18 @@
+# Information synthesis
+Synthesize multiple pieces of information into a coherent response.
+
+**Your task:**
+1. Review all provided information
+2. Identify key themes and patterns
+3. Resolve any contradictions
+4. Generate a unified, coherent output
+
+**Guidelines:**
+- Prioritize the most relevant information
+- Maintain logical flow
+- Be comprehensive but concise
+- Cite sources/sections when appropriate
+
+${PROMPT_FILES}
+
+${PROMPT_INPUT}

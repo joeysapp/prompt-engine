@@ -14,4 +14,6 @@ Explain the following clearly and thoroughly.
 - Any context clues about the audience
 - Specific aspects the user emphasizes
 
+${PROMPT_FILES}
+
 ${PROMPT_INPUT}

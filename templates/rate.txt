@@ -1,0 +1,14 @@
+# Quality rating
+Rate the following content on a scale of 1-10.
+
+**Criteria to evaluate:**
+- Quality: How well-crafted is it?
+- Clarity: How easy is it to understand?
+- Completeness: How thorough is it?
+- Relevance: How on-topic is it?
+
+**Output format:** Provide scores for each criterion and an overall score.
+
+${PROMPT_FILES}
+
+${PROMPT_INPUT}

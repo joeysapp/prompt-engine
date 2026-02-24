@@ -1,0 +1,104 @@
+# Log Analysis Chain
+# Analyzes log files to find patterns, errors, and insights
+name: log-analyze
+description: Analyze log files for errors, patterns, and actionable insights
+
+params:
+  - name: FOCUS
+    required: false
+    default: errors
+    description: What to focus on (errors, warnings, patterns, performance, all)
+  - name: TIMEFRAME
+    required: false
+    default: ""
+    description: Time range to focus on (e.g., "last hour", "2024-01-15")
+
+steps:
+  # Step 1: Identify log format and structure
+  - name: identify-format
+    template: blank
+    format: '{"type":"object","properties":{"log_format":{"type":"string"},"timestamp_format":{"type":"string"},"log_levels":{"type":"array","items":{"type":"string"}},"key_fields":{"type":"array","items":{"type":"string"}}},"required":["log_format"]}'
+    input: |
+      Analyze the structure of this log file:
+
+      ${INPUT}
+
+      Identify:
+      1. The log format (JSON, syslog, custom, etc.)
+      2. Timestamp format
+      3. Log levels present (ERROR, WARN, INFO, DEBUG, etc.)
+      4. Key fields or patterns
+    output: LOG_FORMAT
+
+  # Step 2: Extract errors and warnings
+  - name: extract-issues
+    template: blank
+    format: '{"type":"object","properties":{"errors":{"type":"array","items":{"type":"object","properties":{"timestamp":{"type":"string"},"message":{"type":"string"},"context":{"type":"string"}}}},"warnings":{"type":"array","items":{"type":"object","properties":{"timestamp":{"type":"string"},"message":{"type":"string"}}}},"error_count":{"type":"number"},"warning_count":{"type":"number"}},"required":["errors","warnings","error_count","warning_count"]}'
+    input: |
+      Log Format Info: ${LOG_FORMAT}
+      Focus: ${FOCUS}
+      Timeframe: ${TIMEFRAME}
+
+      Log Content:
+      ${INPUT}
+
+      Extract all errors and warnings from this log.
+      For each issue, include:
+      - Timestamp
+      - Error/warning message
+      - Relevant context (surrounding lines, stack traces)
+    output: ISSUES
+
+  # Step 3: Identify patterns
+  - name: find-patterns
+    template: blank
+    format: '{"type":"object","properties":{"recurring_errors":{"type":"array","items":{"type":"object","properties":{"pattern":{"type":"string"},"count":{"type":"number"},"first_seen":{"type":"string"},"last_seen":{"type":"string"}}}},"anomalies":{"type":"array","items":{"type":"string"}},"trends":{"type":"array","items":{"type":"string"}}}}'
+    input: |
+      Log Format: ${LOG_FORMAT}
+      Issues Found: ${ISSUES}
+
+      Full Log:
+      ${INPUT}
+
+      Analyze patterns in this log:
+      1. Recurring errors (group similar errors)
+      2. Anomalies (unusual entries)
+      3. Trends (increasing errors, timing patterns)
+    output: PATTERNS
+
+  # Step 4: Generate recommendations
+  - name: generate-recommendations
+    template: blank
+    format: '{"type":"object","properties":{"critical_issues":{"type":"array","items":{"type":"string"}},"recommendations":{"type":"array","items":{"type":"object","properties":{"issue":{"type":"string"},"recommendation":{"type":"string"},"priority":{"type":"string"}}}},"root_causes":{"type":"array","items":{"type":"string"}}}}'
+    input: |
+      Log Analysis:
+      - Format: ${LOG_FORMAT}
+      - Issues: ${ISSUES}
+      - Patterns: ${PATTERNS}
+
+      Generate actionable recommendations:
+      1. Critical issues that need immediate attention
+      2. Specific recommendations for each major issue
+      3. Potential root causes
+    output: RECOMMENDATIONS
+
+  # Step 5: Generate final report
+  - name: final-report
+    template: blank
+    format: '{"type":"object","properties":{"summary":{"type":"string"},"error_count":{"type":"number"},"warning_count":{"type":"number"},"critical_issues":{"type":"array","items":{"type":"string"}},"top_errors":{"type":"array","items":{"type":"object","properties":{"error":{"type":"string"},"count":{"type":"number"},"recommendation":{"type":"string"}}}},"health_score":{"type":"number","minimum":0,"maximum":100}},"required":["summary","error_count","warning_count","health_score"]}'
+    input: |
+      File: ${INPUT_FILENAME}
+
+      Log Analysis Complete:
+      - Format: ${LOG_FORMAT}
+      - Issues: ${ISSUES}
+      - Patterns: ${PATTERNS}
+      - Recommendations: ${RECOMMENDATIONS}
+
+      Generate a final report including:
+      1. Executive summary (2-3 sentences)
+      2. Error and warning counts
+      3. Critical issues requiring attention
+      4. Top errors with recommendations
+      5. Overall health score (0-100, where 100 is healthy)
+    output: FINAL_REPORT
